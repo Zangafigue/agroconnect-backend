@@ -2,6 +2,7 @@ const express = require('express');
 const cors    = require('cors');
 const helmet  = require('helmet');
 const morgan  = require('morgan');
+const rateLimit   = require('express-rate-limit');
 const swaggerUi   = require('swagger-ui-express');
 const swaggerSpec = require('./config/swagger');
 
@@ -22,11 +23,26 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// ── Rate Limiting ─────────────────────────────────────────────────────────────
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Trop de requêtes, réessayez dans 15 minutes.' }
+});
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10, // plus strict pour les routes sensibles
+  message: { message: 'Trop de tentatives de connexion, réessayez dans 15 minutes.' }
+});
+app.use(globalLimiter);
+
 // ── Documentation Swagger ────────────────────────────────────────────────────
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// ── Routes ───────────────────────────────────────────────────────────────────// Routes (branchées par les membres)
-app.use('/api/auth',          require('./routes/auth.routes'));
+// ── Routes ───────────────────────────────────────────────────────────────────
+app.use('/api/auth',          authLimiter, require('./routes/auth.routes'));
 app.use('/api/products',      require('./routes/products.routes'));
 app.use('/api/orders',        require('./routes/orders.routes'));
 app.use('/api/deliveries',    require('./routes/deliveries.routes'));
