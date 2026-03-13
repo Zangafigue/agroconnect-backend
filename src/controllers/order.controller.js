@@ -11,6 +11,11 @@ exports.createOrder = async (req, res) => {
     if (product.quantity < quantity) return res.status(400).json({ message: `Stock insuffisant. Disponible : ${product.quantity} ${product.unit}` });
     const totalPrice = product.price * quantity;
     const order = await Order.create({ buyer: req.user.sub, seller: product.seller, product: productId, quantity, unitPrice: product.price, totalPrice, deliveryAddress, deliveryCity, deliveryLat, deliveryLng, deliveryBudget, buyerNote });
+
+    // RÈGLE : Déduire le stock dès la commande
+    product.quantity -= quantity;
+    await product.save();
+
     res.status(201).json(order);
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
@@ -60,6 +65,14 @@ exports.cancelOrder = async (req, res) => {
     if (!isOwner) return res.status(403).json({ message: 'Non autorisé' });
     if (!['PENDING','CONFIRMED'].includes(order.status)) return res.status(400).json({ message: 'Impossible d\'annuler à ce stade' });
     const updated = await Order.findByIdAndUpdate(order._id, { status: 'CANCELLED', refusalReason: req.body.reason }, { new: true });
+
+    // RÈGLE : Rendre le stock si annulé
+    const product = await Product.findById(order.product);
+    if (product) {
+       product.quantity += order.quantity;
+       await product.save();
+    }
+
     res.json(updated);
   } catch (err) { res.status(500).json({ message: err.message }); }
 };

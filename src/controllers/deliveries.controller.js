@@ -94,8 +94,8 @@ exports.acceptOffer = async (req, res) => {
       deliveryFee: offer.proposedFee,
     });
 
-    // Optionnel: Initier le paiement escrow à ce stade si on suppose le paiement en ligne direct.
-    // await PaymentsService.initiatePayment(offer.order._id, req.user.sub, 'CINETPAY');
+    // Initier le paiement escrow (séquestre)
+    await PaymentsService.initiatePayment(offer.order._id, req.user.sub, 'CINETPAY');
 
     res.json({ message: 'Transporteur assigné avec succès', offer });
   } catch (err) {
