@@ -10,6 +10,15 @@
 - **Auth** : JWT + OTP Email (Resend.com)
 - **Docs** : Swagger UI
 
+## 📖 Guides d'Intégration
+
+Pour faciliter le travail des équipes frontend, des guides spécifiques sont disponibles :
+
+- [**🌐 Guide Développeur Web**](./GUIDE_DEV_WEB.md) : URLs local/prod, Axios, gestion JWT.
+- [**📱 Guide Développeur Mobile**](./GUIDE_DEV_MOBILE.md) : IPs émulateurs, Dio (Flutter), suivi GPS.
+
+---
+
 ## Installation
 
 ```bash
