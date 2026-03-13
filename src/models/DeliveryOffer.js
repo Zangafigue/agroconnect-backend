@@ -8,7 +8,6 @@ const deliveryOfferSchema = new mongoose.Schema({
   status:      { type: String, enum: ['PENDING','ACCEPTED','REJECTED'], default: 'PENDING' },
 }, { timestamps: true });
 
-// Index pour chercher les offres d'une commande
 deliveryOfferSchema.index({ order: 1, status: 1 });
 
 module.exports = mongoose.model('DeliveryOffer', deliveryOfferSchema);

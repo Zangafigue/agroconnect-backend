@@ -25,14 +25,14 @@ app.use(express.urlencoded({ extended: true }));
 // ── Documentation Swagger ────────────────────────────────────────────────────
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// ── Routes ───────────────────────────────────────────────────────────────────
+// ── Routes ───────────────────────────────────────────────────────────────────// Routes (branchées par les membres)
 app.use('/api/auth',          require('./routes/auth.routes'));
-app.use('/api/products',      require('./routes/product.routes'));
-app.use('/api/orders',        require('./routes/order.routes'));
-app.use('/api/deliveries',    require('./routes/delivery.routes'));
-app.use('/api/payments',      require('./routes/payment.routes'));
-app.use('/api/conversations', require('./routes/message.routes'));
-app.use('/api/disputes',      require('./routes/dispute.routes'));
+app.use('/api/products',      require('./routes/products.routes'));
+app.use('/api/orders',        require('./routes/orders.routes'));
+app.use('/api/deliveries',    require('./routes/deliveries.routes'));
+app.use('/api/payments',      require('./routes/payments.routes'));
+app.use('/api/conversations', require('./routes/messaging.routes'));
+app.use('/api/disputes',      require('./routes/disputes.routes'));
 app.use('/api/admin',         require('./routes/admin.routes'));
 
 // ── Health check ─────────────────────────────────────────────────────────────

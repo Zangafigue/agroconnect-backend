@@ -9,10 +9,10 @@ const paymentSchema = new mongoose.Schema({
   deliveryAmount:  { type: Number, required: true },
   totalAmount:     { type: Number, required: true },
   splits: [{
-    recipient:   { type: String },
+    recipient:   { type: String }, // 'farmer', 'transporter', 'platform'
     recipientId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     amount:      { type: Number },
-    type:        { type: String },
+    type:        { type: String }, // 'product', 'delivery', 'commission'
     released:    { type: Boolean, default: false }
   }],
   status: {
