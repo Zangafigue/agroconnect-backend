@@ -1,4 +1,5 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const cors    = require('cors');
 const helmet  = require('helmet');
 const morgan  = require('morgan');
@@ -22,17 +23,32 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// ── Rate Limiting ─────────────────────────────────────────────────────────────
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Trop de requêtes, réessayez dans 15 minutes.' }
+});
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10, // plus strict pour les routes sensibles
+  message: { message: 'Trop de tentatives de connexion, réessayez dans 15 minutes.' }
+});
+app.use(globalLimiter);
+
 // ── Documentation Swagger ────────────────────────────────────────────────────
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // ── Routes ───────────────────────────────────────────────────────────────────
-app.use('/api/auth',          require('./routes/auth.routes'));
-app.use('/api/products',      require('./routes/product.routes'));
-app.use('/api/orders',        require('./routes/order.routes'));
-app.use('/api/deliveries',    require('./routes/delivery.routes'));
-app.use('/api/payments',      require('./routes/payment.routes'));
-app.use('/api/conversations', require('./routes/message.routes'));
-app.use('/api/disputes',      require('./routes/dispute.routes'));
+app.use('/api/auth',          authLimiter, require('./routes/auth.routes'));
+app.use('/api/products',      require('./routes/products.routes'));
+app.use('/api/orders',        require('./routes/orders.routes'));
+app.use('/api/deliveries',    require('./routes/deliveries.routes'));
+app.use('/api/payments',      require('./routes/payments.routes'));
+app.use('/api/conversations', require('./routes/messaging.routes'));
+app.use('/api/disputes',      require('./routes/disputes.routes'));
 app.use('/api/admin',         require('./routes/admin.routes'));
 
 // ── Health check ─────────────────────────────────────────────────────────────

@@ -14,7 +14,7 @@ const generateToken = (user) => jwt.sign(
 // POST /auth/register
 exports.register = async (req, res) => {
   try {
-    const { email, password, firstName, lastName, phone, role } = req.body;
+    const { email, password, firstName, lastName, phone, role = 'BUYER' } = req.body;
     if (!['FARMER','BUYER','TRANSPORTER'].includes(role))
       return res.status(400).json({ message: 'Rôle invalide' });
 
@@ -34,7 +34,7 @@ exports.register = async (req, res) => {
 
     await sendOtpEmail(email, firstName, otp);
     const token = generateToken(user);
-    res.status(201).json({ message: 'Compte créé. Vérifiez votre email.', token, user: user.toJSON() });
+    res.status(201).json({ message: 'Compte créé. Vérifiez votre email.', access_token: token, user: user.toJSON() });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -61,7 +61,7 @@ exports.verifyOtp = async (req, res) => {
     });
     const updatedUser = await User.findById(user._id);
     const token = generateToken(updatedUser);
-    res.json({ message: 'Email vérifié avec succès ✅', token, user: updatedUser.toJSON() });
+    res.json({ message: 'Email vérifié avec succès ✅', access_token: token, user: updatedUser.toJSON() });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -78,6 +78,40 @@ exports.resendOtp = async (req, res) => {
     await User.findByIdAndUpdate(user._id, { otpCode: otpHash, otpExpires, otpAttempts: 0 });
     await sendOtpEmail(user.email, user.firstName, otp);
     res.json({ message: 'Nouvel OTP envoyé. Vérifiez votre email.' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// POST /auth/change-email
+exports.changeEmail = async (req, res) => {
+  try {
+    const { newEmail } = req.body;
+    if (!newEmail || !/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(newEmail)) {
+      return res.status(400).json({ message: 'Format d\'email invalide' });
+    }
+
+    const existing = await User.findOne({ email: newEmail.toLowerCase() });
+    if (existing) return res.status(409).json({ message: 'Email déjà utilisé par un autre compte' });
+
+    const otp = generateOTP();
+    const otpHash = await bcrypt.hash(otp, 10);
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+
+    const user = await User.findByIdAndUpdate(
+      req.user.sub,
+      { 
+        email: newEmail.toLowerCase(), 
+        isVerified: false, 
+        otpCode: otpHash, 
+        otpExpires, 
+        otpAttempts: 0 
+      },
+      { new: true }
+    );
+
+    await sendOtpEmail(user.email, user.firstName, otp);
+    res.json({ message: 'Email mis à jour. Nouveau code envoyé.', user: user.toJSON() });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -145,7 +179,29 @@ exports.updateCapabilities = async (req, res) => {
       { new: true }
     );
     const token = generateToken(user);
-    res.json({ message: 'Capacités mises à jour', token, user: user.toJSON() });
+    res.json({ message: 'Capacités mises à jour', access_token: token, user: user.toJSON() });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// PATCH /auth/profile
+exports.updateProfile = async (req, res) => {
+  try {
+    const { firstName, lastName, phone, city, address, bio } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.user.sub,
+      { 
+        ...(firstName && { firstName }), 
+        ...(lastName && { lastName }), 
+        ...(phone && { phone }),
+        ...(city && { city }),
+        ...(address && { address }),
+        ...(bio && { bio })
+      },
+      { new: true }
+    );
+    res.json({ message: 'Profil mis à jour 🎉', user: user.toJSON() });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

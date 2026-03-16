@@ -1,4 +1,5 @@
-const { Conversation, Message } = require('../models/Message');
+const Conversation = require('../models/Conversation');
+const Message      = require('../models/Message');
 const Order = require('../models/Order');
 
 exports.getMyConversations = async (req, res) => {
