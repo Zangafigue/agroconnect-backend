@@ -4,21 +4,21 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const sendOtpEmail = async (email, firstName, otp) => {
   try {
     console.log('\n' + '='.repeat(50));
-    console.log(`🚀 [OTP DEBUG] Code: ${otp} pour ${email}`);
+    console.log(`[OTP DEBUG] Code: ${otp} pour ${email}`);
     console.log('='.repeat(50) + '\n');
     
     if (process.env.NODE_ENV === 'development') {
-      console.log('💡 [SIMULATION] En mode développement, utilisez le code ci-dessus.');
+      console.log('[SIMULATION] En mode développement, utilisez le code ci-dessus.');
       return;
     }
 
     await resend.emails.send({
       from: `${process.env.FROM_NAME || 'AgroConnect BF'} <${process.env.FROM_EMAIL}>`,
       to:   email,
-      subject: '🌾 Votre code de vérification AgroConnect BF',
+      subject: 'Votre code de vérification AgroConnect BF',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;">
-          <h2 style="color: #16a34a;">Bonjour ${firstName} 👋</h2>
+          <h2 style="color: #16a34a;">Bonjour ${firstName}</h2>
           <p>Votre code de vérification est :</p>
           <div style="background: #f0fdf4; border: 2px solid #16a34a; border-radius: 12px; text-align: center; padding: 24px; margin: 20px 0;">
             <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #16a34a;">${otp}</span>
@@ -31,14 +31,14 @@ const sendOtpEmail = async (email, firstName, otp) => {
       `,
     });
   } catch (err) {
-    console.error('❌ Erreur envoi email OTP:', err.message);
+    console.error('Erreur envoi email OTP:', err.message);
   }
 };
 
 const sendPasswordResetEmail = async (email, firstName, otp) => {
   try {
     console.log('\n' + '='.repeat(50));
-    console.log(`🔑 [PASSWORD RESET DEBUG] Code: ${otp} pour ${email}`);
+    console.log(`[PASSWORD RESET DEBUG] Code: ${otp} pour ${email}`);
     console.log('='.repeat(50) + '\n');
     
     if (process.env.NODE_ENV === 'development') return;
@@ -46,7 +46,7 @@ const sendPasswordResetEmail = async (email, firstName, otp) => {
     await resend.emails.send({
       from: `${process.env.FROM_NAME || 'AgroConnect BF'} <${process.env.FROM_EMAIL}>`,
       to:   email,
-      subject: '🔑 Réinitialisation de votre mot de passe AgroConnect BF',
+      subject: 'Réinitialisation de votre mot de passe AgroConnect BF',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;">
           <h2 style="color: #16a34a;">Bonjour ${firstName}</h2>
@@ -61,7 +61,7 @@ const sendPasswordResetEmail = async (email, firstName, otp) => {
       `,
     });
   } catch (err) {
-    console.error('❌ Erreur envoi email Reset Password:', err.message);
+    console.error('Erreur envoi email Reset Password:', err.message);
   }
 };
 

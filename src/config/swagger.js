@@ -4,7 +4,7 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: '🌾 AgroConnect BF API',
+      title: 'AgroConnect BF API',
       version: '1.0.0',
       description: 'API de la plateforme agricole du Burkina Faso — CS27 Groupe 14',
     },

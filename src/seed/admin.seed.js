@@ -8,7 +8,7 @@ async function seedAdmin() {
 
   const existing = await User.findOne({ email: process.env.ADMIN_EMAIL || 'admin@agroconnect.bf' });
   if (existing) {
-    console.log('✅ Admin déjà existant');
+    console.log('Admin déjà existant');
     return;
   }
 
@@ -25,8 +25,8 @@ async function seedAdmin() {
     isActive:     true,
   });
 
-  console.log(`✅ Admin créé : ${process.env.ADMIN_EMAIL || 'admin@agroconnect.bf'}`);
-  console.log('⚠️  Changez le mot de passe avant la démo !');
+  console.log(`Admin créé : ${process.env.ADMIN_EMAIL || 'admin@agroconnect.bf'}`);
+  console.log('Changez le mot de passe avant la démo !');
 }
 
 // Si exécuté directement

@@ -6,8 +6,8 @@ const PORT = process.env.PORT || 3000;
 
 connectDB().then(() => {
   app.listen(PORT, () => {
-    console.log(`🌾 AgroConnect BF API running on port ${PORT}`);
-    console.log(`📚 Swagger : http://localhost:${PORT}/api/docs`);
-    console.log(`❤️  Health : http://localhost:${PORT}/api/health`);
+    console.log(`AgroConnect BF API running on port ${PORT}`);
+    console.log(`Swagger : http://localhost:${PORT}/api/docs`);
+    console.log(`Health : http://localhost:${PORT}/api/health`);
   });
 });

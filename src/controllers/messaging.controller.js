@@ -111,7 +111,7 @@ exports.sendPriceOffer = async (req, res) => {
     const msg = await Message.create({
       conversation: conversation._id,
       sender: req.user.sub,
-      content: `💰 Offre de prix : ${amount.toLocaleString()} FCFA`,
+      content: `Offre de prix : ${amount.toLocaleString()} FCFA`,
       type: 'price_offer',
       offerAmount: amount,
     });
@@ -144,7 +144,7 @@ exports.respondToOffer = async (req, res) => {
     const response = await Message.create({
       conversation: msg.conversation._id,
       sender: req.user.sub,
-      content: accept ? '✅ Offre acceptée' : '❌ Offre refusée',
+      content: accept ? 'Offre acceptée' : 'Offre refusée',
       type: responseType,
     });
     
@@ -155,7 +155,7 @@ exports.respondToOffer = async (req, res) => {
       msg.sender,
       'MESSAGE',
       accept ? 'Offre acceptée' : 'Offre refusée',
-      accept ? '✅ Votre offre de prix a été acceptée.' : '❌ Votre offre de prix a été refusée.',
+      accept ? 'Votre offre de prix a été acceptée.' : 'Votre offre de prix a été refusée.',
       msg.conversation._id
     );
 

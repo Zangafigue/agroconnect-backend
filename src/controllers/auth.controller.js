@@ -61,7 +61,7 @@ exports.verifyOtp = async (req, res) => {
     });
     const updatedUser = await User.findById(user._id);
     const token = generateToken(updatedUser);
-    res.json({ message: 'Email vérifié avec succès ✅', access_token: token, user: updatedUser.toJSON() });
+    res.json({ message: 'Email vérifié avec succès', access_token: token, user: updatedUser.toJSON() });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -163,7 +163,7 @@ exports.resetPassword = async (req, res) => {
     await User.findByIdAndUpdate(user._id, {
       passwordHash, $unset: { resetPasswordToken: '', resetPasswordExpires: '' }
     });
-    res.json({ message: 'Mot de passe réinitialisé avec succès ✅' });
+    res.json({ message: 'Mot de passe réinitialisé avec succès' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -201,7 +201,7 @@ exports.updateProfile = async (req, res) => {
       },
       { new: true }
     );
-    res.json({ message: 'Profil mis à jour 🎉', user: user.toJSON() });
+    res.json({ message: 'Profil mis à jour', user: user.toJSON() });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

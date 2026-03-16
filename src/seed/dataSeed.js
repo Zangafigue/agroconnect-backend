@@ -6,7 +6,7 @@ async function seedData() {
   const User = require('../models/User');
   const Product = require('../models/Product');
 
-  console.log('🌱 Début du Data Seed...');
+  console.log('Début du Data Seed...');
 
   // 1. Nettoyage optionnel (On garde l'admin, on vire le reste si on veut reset, ici on ajoute juste si n'existe pas)
   const farmerEmail = 'farmer@test.com';
@@ -29,9 +29,9 @@ async function seedData() {
       specialty: 'Céréales et Légumes',
       walletBalance: 150000
     });
-    console.log(`✅ Farmer Test créé: ${farmerEmail} / password123`);
+    console.log(`Farmer Test créé: ${farmerEmail} / password123`);
   } else {
-    console.log(`ℹ️ Farmer Test existe déjà: ${farmerEmail}`);
+    console.log(`Farmer Test existe déjà: ${farmerEmail}`);
   }
 
   const buyerEmail = 'buyer@test.com';
@@ -52,7 +52,7 @@ async function seedData() {
       city: 'Ouagadougou',
       walletBalance: 500000
     });
-    console.log(`✅ Buyer Test créé: ${buyerEmail} / password123`);
+    console.log(`Buyer Test créé: ${buyerEmail} / password123`);
   }
 
   const transporterEmail = 'transporter@test.com';
@@ -73,12 +73,12 @@ async function seedData() {
       city: 'Ouagadougou',
       vehicleType: 'Camionnette 3.5T'
     });
-    console.log(`✅ Transporter Test créé: ${transporterEmail} / password123`);
+    console.log(`Transporter Test créé: ${transporterEmail} / password123`);
   }
 
   // 2. Création de faux produits pour le Farmer
   await Product.deleteMany({ seller: farmer._id });
-  console.log('📦 Création de faux produits...');
+  console.log('Création de faux produits...');
   await Product.insertMany([
       {
         seller: farmer._id,
@@ -117,9 +117,9 @@ async function seedData() {
         available: true
       }
     ]);
-    console.log('✅ 3 Produits de test créés pour le Farmer.');
+    console.log('3 Produits de test créés pour le Farmer.');
 
-  console.log('🎉 Seed Data terminé !');
+  console.log('Seed Data terminé !');
   process.exit(0);
 }
 
