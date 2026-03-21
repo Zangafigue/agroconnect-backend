@@ -8,6 +8,9 @@ const swaggerSpec = require('./config/swagger');
 
 const app = express();
 
+// -- Configuration Proxy (Nécessaire pour Railway / express-rate-limit) --------
+app.set('trust proxy', 1);
+
 // -- Middlewares globaux ------------------------------------------------------
 app.use(helmet());
 app.use(cors({
