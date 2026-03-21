@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 
 /**
- * verifyToken — Middleware JWT Bearer
+ * verifyToken - Middleware JWT Bearer
  * Vérifie le token et charge req.user
  */
 const verifyToken = (req, res, next) => {

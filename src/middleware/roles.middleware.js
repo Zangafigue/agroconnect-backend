@@ -1,5 +1,5 @@
 /**
- * requireRole — Middleware RBAC
+ * requireRole - Middleware RBAC
  * Usage : requireRole('ADMIN') ou requireRole('FARMER', 'BUYER')
  */
 const requireRole = (...roles) => (req, res, next) => {

@@ -10,11 +10,11 @@ async function test() {
 
   try {
     await client.connect();
-    console.log('✅ Success: Connected to MongoDB!');
+    console.log('Success: Connected to MongoDB!');
     const dbs = await client.db().admin().listDatabases();
     console.log('Databases:', dbs.databases.map(db => db.name));
   } catch (err) {
-    console.error('❌ Error details:', err);
+    console.error('Error details:', err);
     if (err.reason) console.error('Reason:', err.reason);
   } finally {
     await client.close();

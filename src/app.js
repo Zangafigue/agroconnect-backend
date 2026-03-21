@@ -8,7 +8,7 @@ const swaggerSpec = require('./config/swagger');
 
 const app = express();
 
-// ── Middlewares globaux ──────────────────────────────────────────────────────
+// -- Middlewares globaux ------------------------------------------------------
 app.use(helmet());
 app.use(cors({
   origin: [
@@ -23,7 +23,7 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ── Rate Limiting ─────────────────────────────────────────────────────────────
+// -- Rate Limiting -------------------------------------------------------------
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100,
@@ -38,10 +38,10 @@ const authLimiter = rateLimit({
 });
 app.use(globalLimiter);
 
-// ── Documentation Swagger ────────────────────────────────────────────────────
+// -- Documentation Swagger ----------------------------------------------------
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// ── Routes ───────────────────────────────────────────────────────────────────
+// -- Routes -------------------------------------------------------------------
 app.use('/api/auth',          authLimiter, require('./routes/auth.routes'));
 app.use('/api/products',      require('./routes/products.routes'));
 app.use('/api/orders',        require('./routes/orders.routes'));
@@ -51,15 +51,15 @@ app.use('/api/conversations', require('./routes/messaging.routes'));
 app.use('/api/disputes',      require('./routes/disputes.routes'));
 app.use('/api/admin',         require('./routes/admin.routes'));
 
-// ── Health check ─────────────────────────────────────────────────────────────
+// -- Health check -------------------------------------------------------------
 app.get('/api/health', (req, res) =>
   res.json({ status: 'OK', version: '1.0.0', env: process.env.NODE_ENV })
 );
 
-// ── 404 ───────────────────────────────────────────────────────────────────────
+// -- 404 -----------------------------------------------------------------------
 app.use((req, res) => res.status(404).json({ message: 'Route non trouvée' }));
 
-// ── Error handler global ─────────────────────────────────────────────────────
+// -- Error handler global -----------------------------------------------------
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(err.status || 500).json({ message: err.message || 'Erreur serveur' });

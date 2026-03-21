@@ -53,7 +53,7 @@ exports.sendPriceOffer = async (req, res) => {
     if (!conv?.participants.map(p => p.toString()).includes(req.user.sub)) return res.status(403).json({ message: 'Non participant' });
     const msg = await Message.create({
       conversation: conv._id, sender: req.user.sub,
-      content: `💰 Offre de prix : ${amount.toLocaleString()} FCFA`,
+      content: `Offre de prix : ${amount.toLocaleString()} FCFA`,
       type: 'price_offer', offerAmount: amount,
     });
     await Conversation.findByIdAndUpdate(conv._id, { lastMessage: msg._id });
@@ -72,7 +72,7 @@ exports.respondToOffer = async (req, res) => {
     }
     const response = await Message.create({
       conversation: msg.conversation._id, sender: req.user.sub,
-      content: accept ? '✅ Offre acceptée' : '❌ Offre refusée', type: responseType,
+      content: accept ? 'Offre acceptée' : 'Offre refusée', type: responseType,
     });
     res.json(response);
   } catch (err) { res.status(500).json({ message: err.message }); }

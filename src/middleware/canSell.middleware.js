@@ -1,5 +1,5 @@
 /**
- * requireCanSell — Vérifie que l'utilisateur peut vendre
+ * requireCanSell - Vérifie que l'utilisateur peut vendre
  */
 const requireCanSell = (req, res, next) => {
   if (!req.user?.canSell)

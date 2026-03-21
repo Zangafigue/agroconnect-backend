@@ -1,5 +1,5 @@
 /**
- * requireVerified — Vérifie que l'email est vérifié
+ * requireVerified - Vérifie que l'email est vérifié
  */
 const requireVerified = (req, res, next) => {
   if (!req.user?.isVerified)

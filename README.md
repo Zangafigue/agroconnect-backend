@@ -1,4 +1,4 @@
-# 🌾 AgroConnect BF — Backend API
+# AgroConnect BF - Backend API
 
 **AgroConnect BF** est une plateforme digitale B2B/B2C connectant **agriculteurs**, **acheteurs** et **transporteurs** au Burkina Faso.
 

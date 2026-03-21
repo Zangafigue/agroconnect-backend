@@ -26,7 +26,7 @@ const sendOtpEmail = async (email, firstName, otp) => {
           <p style="color: #6b7280;">Ce code expire dans <strong>10 minutes</strong>.</p>
           <p style="color: #6b7280;">Si vous n'avez pas créé de compte, ignorez cet email.</p>
           <hr style="border-color: #e5e7eb;" />
-          <p style="color: #9ca3af; font-size: 12px;">AgroConnect BF — Plateforme agricole du Burkina Faso</p>
+          <p style="color: #9ca3af; font-size: 12px;">AgroConnect BF - Plateforme agricole du Burkina Faso</p>
         </div>
       `,
     });
@@ -56,7 +56,7 @@ const sendPasswordResetEmail = async (email, firstName, otp) => {
           </div>
           <p style="color: #6b7280;">Ce code expire dans <strong>10 minutes</strong>.</p>
           <hr style="border-color: #e5e7eb;" />
-          <p style="color: #9ca3af; font-size: 12px;">AgroConnect BF — Plateforme agricole du Burkina Faso</p>
+          <p style="color: #9ca3af; font-size: 12px;">AgroConnect BF - Plateforme agricole du Burkina Faso</p>
         </div>
       `,
     });
