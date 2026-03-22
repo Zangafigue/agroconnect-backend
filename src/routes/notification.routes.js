@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const notificationController = require('../controllers/notification.controller');
-const { protect, requireRole } = require('../middleware/auth.middleware');
+const { verifyToken } = require('../middleware/auth.middleware');
+const { requireRole } = require('../middleware/roles.middleware');
 
-router.use(protect);
+router.use(verifyToken);
 router.use(requireRole('ADMIN'));
 
 router.get('/', notificationController.getAdminNotifications);
