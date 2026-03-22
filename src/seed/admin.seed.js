@@ -7,8 +7,12 @@ async function seedAdmin() {
   const User = require('../models/User');
 
   const existing = await User.findOne({ email: process.env.ADMIN_EMAIL || 'admin@agroconnect.bf' });
+  
   if (existing) {
-    console.log('Admin déjà existant');
+    console.log('Admin déjà existant. Mise à jour du mot de passe...');
+    existing.passwordHash = await bcrypt.hash(process.env.ADMIN_PASSWORD || 'Admin@AgroConnect2026!', 12);
+    await existing.save();
+    console.log('Mot de passe admin mis à jour !');
     return;
   }
 
