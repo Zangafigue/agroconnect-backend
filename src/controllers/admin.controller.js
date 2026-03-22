@@ -7,15 +7,26 @@ const PaymentService = require('../services/payment.service');
 
 exports.getStats = async (req, res) => {
   try {
-    const [totalUsers, totalProducts, totalOrders, paymentStats, openDisputes] = await Promise.all([
+    const [totalUsers, totalProducts, totalOrders, paymentStats, openDisputes, pendingWithdrawals] = await Promise.all([
       User.countDocuments({ role: { $ne: 'ADMIN' } }),
-      Product.countDocuments({ available: true }),
+      Product.countDocuments({ available: true, hidden: false }),
       Order.countDocuments(),
       Payment.aggregate([{ $group: { _id: null, totalVolume: { $sum: '$totalAmount' }, totalCommission: { $sum: '$commissionAmount' }, heldFunds: { $sum: { $cond: [{ $eq: ['$status','HELD'] }, '$totalAmount', 0] } } } }]),
       Dispute.countDocuments({ status: 'OPEN' }),
+      Payment.countDocuments({ status: 'PENDING', type: 'WITHDRAWAL' })
     ]);
     const roleStats = await User.aggregate([{ $match: { role: { $ne: 'ADMIN' } } }, { $group: { _id: '$role', count: { $sum: 1 } } }]);
-    res.json({ totalUsers, totalProducts, totalOrders, openDisputes, totalVolume: paymentStats[0]?.totalVolume || 0, totalCommission: paymentStats[0]?.totalCommission || 0, heldFunds: paymentStats[0]?.heldFunds || 0, roleStats });
+    res.json({ 
+      totalUsers, 
+      totalProducts, 
+      totalOrders, 
+      openDisputes, 
+      pendingWithdrawals,
+      totalVolume: paymentStats[0]?.totalVolume || 0, 
+      totalCommission: paymentStats[0]?.totalCommission || 0, 
+      heldFunds: paymentStats[0]?.heldFunds || 0, 
+      roleStats 
+    });
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
@@ -54,6 +65,14 @@ exports.activateUser = async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
+exports.updateUser = async (req, res) => {
+  try {
+    const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true }).select('-passwordHash');
+    if (!user) return res.status(404).json({ message: 'Utilisateur non trouvé' });
+    res.json(user);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
 exports.getProducts = async (req, res) => {
   try {
     const products = await Product.find().populate('seller', 'firstName lastName').sort({ createdAt: -1 });
@@ -65,6 +84,15 @@ exports.hideProduct = async (req, res) => {
   try {
     const product = await Product.findByIdAndUpdate(req.params.id, { hidden: true }, { new: true });
     res.json({ message: 'Produit masqué', product });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+exports.updateProductStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const available = status === 'active';
+    const product = await Product.findByIdAndUpdate(req.params.id, { available, hidden: !available }, { new: true });
+    res.json({ message: `Produit ${available ? 'activé' : 'désactivé'}`, product });
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
@@ -121,5 +149,20 @@ exports.releaseFunds = async (req, res) => {
 exports.validateWithdrawal = async (req, res) => {
   try {
     res.json({ message: 'Retrait validé (simulation)', id: req.params.id });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+exports.createUser = async (req, res) => {
+  try {
+    const bcrypt = require('bcryptjs');
+    const { email, password, firstName, lastName, phone, role } = req.body;
+    const existing = await User.findOne({ email });
+    if (existing) return res.status(409).json({ message: 'Email déjà utilisé' });
+    const passwordHash = await bcrypt.hash(password, 12);
+    const user = await User.create({
+      email, passwordHash, firstName, lastName, phone, role,
+      isVerified: true, isActive: true
+    });
+    res.status(201).json({ message: 'Utilisateur créé avec succès', user: user.toJSON() });
   } catch (err) { res.status(500).json({ message: err.message }); }
 };

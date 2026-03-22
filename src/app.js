@@ -26,6 +26,7 @@ app.use(cors({
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/uploads', express.static('uploads'));
 
 // -- Rate Limiting -------------------------------------------------------------
 const globalLimiter = rateLimit({
@@ -54,6 +55,7 @@ app.use('/api/payments',      require('./routes/payments.routes'));
 app.use('/api/conversations', require('./routes/messaging.routes'));
 app.use('/api/disputes',      require('./routes/disputes.routes'));
 app.use('/api/admin',         require('./routes/admin.routes'));
+app.use('/api/notifications', require('./routes/notification.routes'));
 
 // -- Health check -------------------------------------------------------------
 app.get('/api/health', (req, res) =>
