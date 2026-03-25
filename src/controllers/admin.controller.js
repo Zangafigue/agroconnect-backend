@@ -51,17 +51,20 @@ exports.getUserById = async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
-exports.suspendUser = async (req, res) => {
+exports.updateUserStatus = async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, { isActive: false }, { new: true });
-    res.json({ message: 'Compte suspendu', user });
+    const { isActive } = req.body;
+    const user = await User.findByIdAndUpdate(req.params.id, { isActive }, { new: true });
+    if (!user) return res.status(404).json({ message: 'Utilisateur non trouvé' });
+    res.json({ message: `Compte ${isActive ? 'activé' : 'suspendu'}`, user });
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
-exports.activateUser = async (req, res) => {
+exports.deleteUser = async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, { isActive: true }, { new: true });
-    res.json({ message: 'Compte réactivé', user });
+    const user = await User.findByIdAndDelete(req.params.id);
+    if (!user) return res.status(404).json({ message: 'Utilisateur non trouvé' });
+    res.json({ message: 'Utilisateur supprimé avec succès' });
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
@@ -103,6 +106,23 @@ exports.getOrders = async (req, res) => {
     const skip = (page - 1) * limit;
     const [orders, total] = await Promise.all([Order.find(query).populate('buyer seller product').sort({ createdAt: -1 }).skip(skip).limit(parseInt(limit)), Order.countDocuments(query)]);
     res.json({ orders, total, page: parseInt(page), totalPages: Math.ceil(total / limit) });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+exports.getOrderById = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id).populate('buyer seller product transporter');
+    if (!order) return res.status(404).json({ message: 'Commande non trouvée' });
+    res.json(order);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+exports.updateStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const order = await Order.findByIdAndUpdate(req.params.id, { status }, { new: true });
+    if (!order) return res.status(404).json({ message: 'Commande non trouvée' });
+    res.json(order);
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 

@@ -55,6 +55,13 @@ app.use('/api/payments',      require('./routes/payments.routes'));
 app.use('/api/conversations', require('./routes/messaging.routes'));
 app.use('/api/disputes',      require('./routes/disputes.routes'));
 app.use('/api/admin',         require('./routes/admin.routes'));
+app.use('/api/buyer',         require('./routes/buyer.routes'));
+app.use('/api/farmer',        require('./routes/farmer.routes'));
+app.use('/api/wallet',        require('./routes/wallet.routes'));
+app.use('/api/news',          require('./routes/news.routes'));
+app.use('/api/settings',      require('./routes/settings.routes'));
+app.use('/api/users',         require('./routes/user.routes'));
+app.use('/api/producers',     require('./routes/user.routes')); // Alias for producerService
 app.use('/api/notifications', require('./routes/notification.routes'));
 
 // -- Health check -------------------------------------------------------------

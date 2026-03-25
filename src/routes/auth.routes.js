@@ -38,6 +38,7 @@ router.post('/forgot-password', ctrl.forgotPassword);
 router.post('/reset-password',  ctrl.resetPassword);
 router.patch('/capabilities',   verifyToken, ctrl.updateCapabilities);
 router.patch('/profile',        verifyToken, ctrl.updateProfile);
+router.post('/change-password', verifyToken, ctrl.changePassword);
 router.post('/profile/picture', verifyToken, require('../middleware/upload.middleware').single('avatar'), async (req, res) => {
   try {
     const User = require('../models/User');

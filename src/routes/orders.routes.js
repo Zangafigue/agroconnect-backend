@@ -82,6 +82,7 @@ router.post('/:id/cancel',  ctrl.cancelOrder);
  *     security: [{ bearerAuth: [] }]
  */
 router.patch('/:id/position', requireRole('TRANSPORTER'), ctrl.updateTransporterPosition);
-router.patch('/:id/status',   ctrl.updateStatus); // Simple status update
+router.patch('/:id/status',   ctrl.updateStatus); 
+router.post('/:orderId/offers', requireRole('TRANSPORTER'), require('../controllers/transporter.controller').submitOffer);
 
 module.exports = router;

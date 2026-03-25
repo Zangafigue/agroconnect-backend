@@ -47,17 +47,21 @@ exports.getMyOrdersSeller = async (req, res) => {
 
 exports.getOrders = async (req, res) => {
   try {
-    const { role } = req.query;
+    const { role, status } = req.query;
     let query = {};
+    if (status) query.status = status;
+
     if (role === 'BUYER' || role === 'ACHETEUR') {
-      query = { buyer: req.user.sub };
+      query.buyer = req.user.sub;
     } else if (role === 'FARMER' || role === 'AGRICULTEUR') {
-      query = { seller: req.user.sub };
+      query.seller = req.user.sub;
     } else if (role === 'TRANSPORTER' || role === 'TRANSPORTEUR') {
-        query = { transporter: req.user.sub };
+        query.transporter = req.user.sub;
     } else {
-      // Default: check both roles
-      query = { $or: [{ buyer: req.user.sub }, { seller: req.user.sub }, { transporter: req.user.sub }] };
+      // Default: check both roles if no role specified, but keep status filter if any
+      if (!Object.keys(query).length || (Object.keys(query).length === 1 && query.status)) {
+        query = { ...query, $or: [{ buyer: req.user.sub }, { seller: req.user.sub }, { transporter: req.user.sub }] };
+      }
     }
     const orders = await Order.find(query).populate('buyer seller product transporter').sort({ createdAt: -1 });
     res.json(orders);
