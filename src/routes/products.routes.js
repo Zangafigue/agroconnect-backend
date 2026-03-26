@@ -39,16 +39,6 @@ router.get('/mine',   verifyToken, requireCapability('canSell'), ctrl.getMyProdu
 
 /**
  * @swagger
- * /api/products/liked:
- *   get:
- *     summary: Voir mes produits favoris (likés)
- *     tags: [Products]
- *     security: [{ bearerAuth: [] }]
- */
-router.get('/liked',  verifyToken, ctrl.getLikedProducts);
-
-/**
- * @swagger
  * /api/products/{id}:
  *   get:
  *     summary: Détails d'un produit spécifique
@@ -58,23 +48,13 @@ router.get('/:id',   ctrl.getProductById);
 
 /**
  * @swagger
- * /api/products/{id}/like:
- *   post:
- *     summary: Liker ou enlever le like d'un produit
- *     tags: [Products]
- *     security: [{ bearerAuth: [] }]
- */
-router.post('/:id/like', verifyToken, ctrl.toggleLike);
-
-/**
- * @swagger
  * /api/products:
  *   post:
  *     summary: Publier un nouveau produit (FARMER)
  *     tags: [Products]
  *     security: [{ bearerAuth: [] }]
  */
-router.post('/',     verifyToken, requireCapability('canSell'), upload.array('images', 4), ctrl.createProduct);
+router.post('/',     verifyToken, requireCapability('canSell'), upload.array('images', 5), ctrl.createProduct);
 
 /**
  * @swagger
@@ -84,8 +64,8 @@ router.post('/',     verifyToken, requireCapability('canSell'), upload.array('im
  *     tags: [Products]
  *     security: [{ bearerAuth: [] }]
  */
-router.put('/:id',    verifyToken, requireCapability('canSell'), upload.array('images', 4), ctrl.updateProduct);
-router.patch('/:id',  verifyToken, requireCapability('canSell'), upload.array('images', 4), ctrl.updateProduct);
+router.put('/:id',    verifyToken, requireCapability('canSell'), upload.array('images', 5), ctrl.updateProduct);
+router.patch('/:id',  verifyToken, requireCapability('canSell'), upload.array('images', 5), ctrl.updateProduct);
 
 /**
  * @swagger
