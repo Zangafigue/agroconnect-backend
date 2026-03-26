@@ -2,19 +2,21 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Dossier de stockage
-const uploadDir = 'uploads/profiles';
+// Dossier de stockage générique
+const uploadDir = 'uploads';
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadDir);
+    // On peut encore séparer par sous-dossier si besoin, pour l'instant tout dans uploads/
+    cb(null, uploadDir); 
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'avatar-' + uniqueSuffix + path.extname(file.originalname));
+    const prefix = file.fieldname === 'avatar' ? 'avatar-' : 'prod-';
+    cb(null, prefix + uniqueSuffix + path.extname(file.originalname));
   }
 });
 

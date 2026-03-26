@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const { verifyToken } = require('../middleware/auth.middleware');
 const { requireRole } = require('../middleware/roles.middleware');
+const upload = require('../middleware/upload.middleware');
 const ctrl = require('../controllers/product.controller');
 
 /**
@@ -53,7 +54,7 @@ router.get('/:id',   ctrl.getProductById);
  *     tags: [Products]
  *     security: [{ bearerAuth: [] }]
  */
-router.post('/',     verifyToken, requireRole('FARMER', 'ADMIN'), ctrl.createProduct);
+router.post('/',     verifyToken, requireRole('FARMER', 'ADMIN'), upload.array('images', 4), ctrl.createProduct);
 
 /**
  * @swagger
@@ -63,8 +64,8 @@ router.post('/',     verifyToken, requireRole('FARMER', 'ADMIN'), ctrl.createPro
  *     tags: [Products]
  *     security: [{ bearerAuth: [] }]
  */
-router.put('/:id',    verifyToken, requireRole('FARMER', 'ADMIN'), ctrl.updateProduct);
-router.patch('/:id',  verifyToken, requireRole('FARMER', 'ADMIN'), ctrl.updateProduct);
+router.put('/:id',    verifyToken, requireRole('FARMER', 'ADMIN'), upload.array('images', 4), ctrl.updateProduct);
+router.patch('/:id',  verifyToken, requireRole('FARMER', 'ADMIN'), upload.array('images', 4), ctrl.updateProduct);
 
 /**
  * @swagger

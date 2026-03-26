@@ -42,8 +42,26 @@ exports.updateProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ message: 'Produit non trouvé' });
-    if (product.seller.toString() !== req.user.sub) return res.status(403).json({ message: 'Non autorisé' });
-    const updated = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (product.seller.toString() !== req.user.sub && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Non autorisé' });
+    }
+
+    const { images: existingImages, ...updateData } = req.body;
+    
+    // Gérer les images : fusionner les anciennes conservées et les nouvelles
+    let images = [];
+    if (existingImages) {
+      images = Array.isArray(existingImages) ? existingImages : [existingImages];
+    }
+    if (req.files && req.files.length > 0) {
+      const newImages = req.files.map(f => f.path);
+      images = [...images, ...newImages];
+    }
+    
+    // Si on a des images (fichiers ou existantes), on met à jour
+    if (images.length > 0) updateData.images = images;
+
+    const updated = await Product.findByIdAndUpdate(req.params.id, updateData, { new: true });
     res.json(updated);
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
