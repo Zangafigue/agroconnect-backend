@@ -31,20 +31,39 @@ exports.getProductById = async (req, res) => {
 
 exports.createProduct = async (req, res) => {
   try {
-    const { name, description, price, unit, quantity, category, city, address, lat, lng } = req.body;
-    const images = req.files?.map(f => f.path) || req.body.images || [];
+    const body = req.body || {};
+    const { name, description, price, unit, quantity, category, city, address, lat, lng } = body;
+    const images = req.files?.map(f => f.path) || body.images || [];
+    
+    if (!name || !price) {
+      return res.status(400).json({ message: 'Nom et prix sont requis' });
+    }
+
     const product = await Product.create({ seller: req.user.sub, name, description, price, unit, quantity, category, city, address, lat, lng, images });
     res.status(201).json(product);
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
 exports.updateProduct = async (req, res) => {
+  console.log(`[DEBUG] UpdateProduct hit for ID: ${req.params.id}`);
+  console.log(`[DEBUG] Headers Content-Type: ${req.headers['content-type']}`);
+  console.log(`[DEBUG] Files received: ${req.files?.length || 0}`);
+  
   try {
     const product = await Product.findById(req.params.id);
-    if (!product) return res.status(404).json({ message: 'Produit non trouvé' });
+    if (!product) {
+      console.log(`[DEBUG] Product ${req.params.id} not found`);
+      return res.status(404).json({ message: 'Produit non trouvé' });
+    }
+
+    // Sécurité req.user
+    if (!req.user || !req.user.sub) {
+      console.log(`[DEBUG] User missing sub field: ${JSON.stringify(req.user)}`);
+      return res.status(401).json({ message: 'Session invalide' });
+    }
 
     // Comparaison robuste (ObjectId vs String)
-    const sellerId = product.seller.toString();
+    const sellerId = product.seller ? product.seller.toString() : 'missing';
     const userId = req.user.sub;
     const isAdmin = req.user.role === 'ADMIN';
 
@@ -53,7 +72,9 @@ exports.updateProduct = async (req, res) => {
       return res.status(403).json({ message: 'Non autorisé : vous n\'êtes pas le propriétaire' });
     }
 
-    const { images: existingImages, ...updateData } = req.body;
+    // Destructuration sécurisée
+    const body = req.body || {};
+    const { images: existingImages, ...updateData } = body;
     
     // Gérer les images : fusionner les anciennes conservées et les nouvelles
     let images = [];
