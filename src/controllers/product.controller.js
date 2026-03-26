@@ -2,10 +2,11 @@ const Product = require('../models/Product');
 
 exports.getCatalog = async (req, res) => {
   try {
-    const { category, city, minPrice, maxPrice, search, page = 1, limit = 20 } = req.query;
+    const { category, city, location, minPrice, maxPrice, search, page = 1, limit = 20 } = req.query;
     const query = { available: true, hidden: false };
     if (category) query.category = category;
     if (city)     query.city = new RegExp(city, 'i');
+    if (location) query.location = new RegExp(location, 'i');
     if (minPrice || maxPrice) {
       query.price = {};
       if (minPrice) query.price.$gte = parseFloat(minPrice);
@@ -32,14 +33,14 @@ exports.getProductById = async (req, res) => {
 exports.createProduct = async (req, res) => {
   try {
     const body = req.body || {};
-    const { name, description, price, unit, quantity, category, city, address, lat, lng } = body;
+    const { name, description, price, unit, quantity, category, city, address, location, lat, lng } = body;
     const images = req.files?.map(f => f.path) || body.images || [];
     
     if (!name || !price) {
       return res.status(400).json({ message: 'Nom et prix sont requis' });
     }
 
-    const product = await Product.create({ seller: req.user.sub, name, description, price, unit, quantity, category, city, address, lat, lng, images });
+    const product = await Product.create({ seller: req.user.sub, name, description, price, unit, quantity, category, city, address, location, lat, lng, images });
     res.status(201).json(product);
   } catch (err) { res.status(500).json({ message: err.message }); }
 };

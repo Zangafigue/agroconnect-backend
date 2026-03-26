@@ -11,6 +11,7 @@ const productSchema = new mongoose.Schema({
   images:      [{ type: String }],
   city:        { type: String, required: true },
   address:     { type: String },
+  location:    { type: String },
   lat:         { type: Number },
   lng:         { type: Number },
   available:   { type: Boolean, default: true },
