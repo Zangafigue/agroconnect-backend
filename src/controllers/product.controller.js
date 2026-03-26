@@ -129,3 +129,29 @@ exports.toggleAvailability = async (req, res) => {
     res.json(product);
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
+
+exports.toggleLike = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: 'Produit non trouvé' });
+
+    const userId = req.user.sub;
+    const index = product.likes.indexOf(userId);
+
+    if (index === -1) {
+      product.likes.push(userId);
+    } else {
+      product.likes.splice(index, 1);
+    }
+
+    await product.save();
+    res.json({ message: index === -1 ? 'Produit liké' : 'Like retiré', likesCount: product.likes.length, isLiked: index === -1 });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+exports.getLikedProducts = async (req, res) => {
+  try {
+    const products = await Product.find({ likes: req.user.sub }).populate('seller', 'firstName lastName city averageRating totalRatings').sort({ createdAt: -1 });
+    res.json(products);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};

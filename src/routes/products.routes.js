@@ -39,12 +39,32 @@ router.get('/mine',   verifyToken, requireCapability('canSell'), ctrl.getMyProdu
 
 /**
  * @swagger
+ * /api/products/liked:
+ *   get:
+ *     summary: Voir mes produits favoris (likés)
+ *     tags: [Products]
+ *     security: [{ bearerAuth: [] }]
+ */
+router.get('/liked',  verifyToken, ctrl.getLikedProducts);
+
+/**
+ * @swagger
  * /api/products/{id}:
  *   get:
  *     summary: Détails d'un produit spécifique
  *     tags: [Products]
  */
 router.get('/:id',   ctrl.getProductById);
+
+/**
+ * @swagger
+ * /api/products/{id}/like:
+ *   post:
+ *     summary: Liker ou enlever le like d'un produit
+ *     tags: [Products]
+ *     security: [{ bearerAuth: [] }]
+ */
+router.post('/:id/like', verifyToken, ctrl.toggleLike);
 
 /**
  * @swagger
