@@ -42,8 +42,15 @@ exports.updateProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ message: 'Produit non trouvé' });
-    if (product.seller.toString() !== req.user.sub && req.user.role !== 'ADMIN') {
-      return res.status(403).json({ message: 'Non autorisé' });
+
+    // Comparaison robuste (ObjectId vs String)
+    const sellerId = product.seller.toString();
+    const userId = req.user.sub;
+    const isAdmin = req.user.role === 'ADMIN';
+
+    if (sellerId !== userId && !isAdmin) {
+      console.log(`403 Debug - Seller: ${sellerId}, User: ${userId}, Role: ${req.user.role}`);
+      return res.status(403).json({ message: 'Non autorisé : vous n\'êtes pas le propriétaire' });
     }
 
     const { images: existingImages, ...updateData } = req.body;
@@ -70,7 +77,11 @@ exports.deleteProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ message: 'Produit non trouvé' });
-    if (product.seller.toString() !== req.user.sub) return res.status(403).json({ message: 'Non autorisé' });
+    
+    if (product.seller.toString() !== req.user.sub && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Non autorisé' });
+    }
+    
     await product.deleteOne();
     res.json({ message: 'Produit supprimé' });
   } catch (err) { res.status(500).json({ message: err.message }); }
@@ -87,7 +98,11 @@ exports.toggleAvailability = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ message: 'Produit non trouvé' });
-    if (product.seller.toString() !== req.user.sub) return res.status(403).json({ message: 'Non autorisé' });
+    
+    if (product.seller.toString() !== req.user.sub && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Non autorisé' });
+    }
+    
     product.available = !product.available;
     await product.save();
     res.json(product);
