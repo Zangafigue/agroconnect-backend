@@ -9,7 +9,6 @@ const productSchema = new mongoose.Schema({
   quantity:    { type: Number, required: true, min: 0 },
   category:    { type: String, required: true, enum: ['Céréales','Légumes','Fruits','Élevage','Semences','Autres'] },
   images:      [{ type: String }],
-  likes:       [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   city:        { type: String, required: true },
   address:     { type: String },
   lat:         { type: Number },
