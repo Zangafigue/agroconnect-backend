@@ -26,7 +26,7 @@ async function notifyParticipants(conversation, senderId, messageContent) {
 exports.getMyConversations = async (req, res) => {
   try {
     const conversations = await Conversation.find({ participants: req.user.sub })
-      .populate('participants', 'firstName lastName')
+      .populate('participants', 'firstName lastName profilePicture')
       .populate('lastMessage')
       .sort('-updatedAt');
     res.json(conversations);
@@ -44,7 +44,7 @@ exports.getMessages = async (req, res) => {
       return res.status(403).json({ message: 'Non autorisé' });
 
     const messages = await Message.find({ conversation: conversationId })
-      .populate('sender', 'firstName lastName')
+      .populate('sender', 'firstName lastName profilePicture')
       .sort('-createdAt')
       .limit(limit);
 

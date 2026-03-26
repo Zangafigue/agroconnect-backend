@@ -32,11 +32,13 @@ exports.getStats = async (req, res) => {
 
 exports.getUsers = async (req, res) => {
   try {
-    const { page = 1, limit = 20, role, status } = req.query;
+    const { page = 1, limit = 20, role, status, city, specialty } = req.query;
     const query = { role: { $ne: 'ADMIN' } };
     if (role) query.role = role;
     if (status === 'suspended') query.isActive = false;
     if (status === 'active')    query.isActive = true;
+    if (city)      query.city = new RegExp(city, 'i');
+    if (specialty) query.specialty = new RegExp(specialty, 'i');
     const skip = (page - 1) * limit;
     const [users, total] = await Promise.all([User.find(query).select('-passwordHash').skip(skip).limit(parseInt(limit)), User.countDocuments(query)]);
     res.json({ users, total, page: parseInt(page), totalPages: Math.ceil(total / limit) });
