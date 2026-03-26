@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const { verifyToken } = require('../middleware/auth.middleware');
-const { requireRole } = require('../middleware/roles.middleware');
+const { requireCapability } = require('../middleware/capabilities.middleware');
 const ctrl = require('../controllers/order.controller');
 
 router.use(verifyToken);
@@ -61,7 +61,7 @@ router.get('/:id',    ctrl.getOrderById);
  *     tags: [Orders]
  *     security: [{ bearerAuth: [] }]
  */
-router.post('/:id/confirm', requireRole('FARMER'), ctrl.confirmOrder);
+router.post('/:id/confirm', requireCapability('canSell'), ctrl.confirmOrder);
 
 /**
  * @swagger
@@ -81,8 +81,8 @@ router.post('/:id/cancel',  ctrl.cancelOrder);
  *     tags: [Orders]
  *     security: [{ bearerAuth: [] }]
  */
-router.patch('/:id/position', requireRole('TRANSPORTER'), ctrl.updateTransporterPosition);
+router.patch('/:id/position', requireCapability('canDeliver'), ctrl.updateTransporterPosition);
 router.patch('/:id/status',   ctrl.updateStatus); 
-router.post('/:orderId/offers', requireRole('TRANSPORTER'), require('../controllers/transporter.controller').submitOffer);
+router.post('/:orderId/offers', requireCapability('canDeliver'), require('../controllers/transporter.controller').submitOffer);
 
 module.exports = router;

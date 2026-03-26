@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const { verifyToken } = require('../middleware/auth.middleware');
-const { requireRole } = require('../middleware/roles.middleware');
+const { requireCapability } = require('../middleware/capabilities.middleware');
 const upload = require('../middleware/upload.middleware');
 const ctrl = require('../controllers/product.controller');
 
@@ -35,7 +35,7 @@ router.get('/',      ctrl.getCatalog);
  *     tags: [Products]
  *     security: [{ bearerAuth: [] }]
  */
-router.get('/mine',   verifyToken, requireRole('FARMER'), ctrl.getMyProducts);
+router.get('/mine',   verifyToken, requireCapability('canSell'), ctrl.getMyProducts);
 
 /**
  * @swagger
@@ -54,7 +54,7 @@ router.get('/:id',   ctrl.getProductById);
  *     tags: [Products]
  *     security: [{ bearerAuth: [] }]
  */
-router.post('/',     verifyToken, requireRole('FARMER', 'ADMIN'), upload.array('images', 4), ctrl.createProduct);
+router.post('/',     verifyToken, requireCapability('canSell'), upload.array('images', 4), ctrl.createProduct);
 
 /**
  * @swagger
@@ -64,8 +64,8 @@ router.post('/',     verifyToken, requireRole('FARMER', 'ADMIN'), upload.array('
  *     tags: [Products]
  *     security: [{ bearerAuth: [] }]
  */
-router.put('/:id',    verifyToken, requireRole('FARMER', 'ADMIN'), upload.array('images', 4), ctrl.updateProduct);
-router.patch('/:id',  verifyToken, requireRole('FARMER', 'ADMIN'), upload.array('images', 4), ctrl.updateProduct);
+router.put('/:id',    verifyToken, requireCapability('canSell'), upload.array('images', 4), ctrl.updateProduct);
+router.patch('/:id',  verifyToken, requireCapability('canSell'), upload.array('images', 4), ctrl.updateProduct);
 
 /**
  * @swagger
@@ -75,7 +75,7 @@ router.patch('/:id',  verifyToken, requireRole('FARMER', 'ADMIN'), upload.array(
  *     tags: [Products]
  *     security: [{ bearerAuth: [] }]
  */
-router.delete('/:id', verifyToken, requireRole('FARMER', 'ADMIN'), ctrl.deleteProduct);
+router.delete('/:id', verifyToken, requireCapability('canSell'), ctrl.deleteProduct);
 
 /**
  * @swagger
@@ -85,6 +85,6 @@ router.delete('/:id', verifyToken, requireRole('FARMER', 'ADMIN'), ctrl.deletePr
  *     tags: [Products]
  *     security: [{ bearerAuth: [] }]
  */
-router.patch('/:id/availability', verifyToken, requireRole('FARMER'), ctrl.toggleAvailability);
+router.patch('/:id/availability', verifyToken, requireCapability('canSell'), ctrl.toggleAvailability);
 
 module.exports = router;
