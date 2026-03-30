@@ -6,14 +6,15 @@ const {
   approveRequest,
   rejectRequest
 } = require('../controllers/roleRequest.controller');
-const { protect, admin } = require('../middleware/auth.middleware');
+const { verifyToken } = require('../middleware/auth.middleware');
+const { requireRole } = require('../middleware/roles.middleware');
 
 // Routes Utilisateur
-router.post('/support/role-requests', protect, createRoleRequest);
+router.post('/support/role-requests', verifyToken, createRoleRequest);
 
 // Routes Admin
-router.get('/admin/role-requests', protect, admin, getAllRequests);
-router.patch('/admin/role-requests/:id/approve', protect, admin, approveRequest);
-router.patch('/admin/role-requests/:id/reject', protect, admin, rejectRequest);
+router.get('/admin/role-requests', verifyToken, requireRole('ADMIN'), getAllRequests);
+router.patch('/admin/role-requests/:id/approve', verifyToken, requireRole('ADMIN'), approveRequest);
+router.patch('/admin/role-requests/:id/reject', verifyToken, requireRole('ADMIN'), rejectRequest);
 
 module.exports = router;

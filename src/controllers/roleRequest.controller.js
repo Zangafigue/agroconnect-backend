@@ -22,13 +22,13 @@ exports.createRoleRequest = async (req, res) => {
     }
 
     // Vérifier s'il a déjà une demande en attente
-    const existingReq = await RoleRequest.findOne({ user: req.user.id, requestedRole, status: 'PENDING' });
+    const existingReq = await RoleRequest.findOne({ user: req.user.sub, requestedRole, status: 'PENDING' });
     if (existingReq) {
       return res.status(400).json({ success: false, message: 'Une demande est déjà en attente.' });
     }
 
     const roleRequest = await RoleRequest.create({
-      user: req.user.id,
+      user: req.user.sub,
       requestedRole,
       details: details || {}
     });
