@@ -5,11 +5,22 @@ const { getDefaultCapabilities } = require('../utils/capabilities');
 const { sendOtpEmail, sendPasswordResetEmail } = require('../services/email.service');
 
 const generateOTP   = () => Math.floor(100000 + Math.random() * 900000).toString();
-const generateToken = (user) => jwt.sign(
-  { sub: user._id, email: user.email, role: user.role, canSell: user.canSell, canBuy: user.canBuy, isVerified: user.isVerified },
-  process.env.JWT_SECRET,
-  { expiresIn: process.env.JWT_EXPIRATION || '7d' }
-);
+const generateToken = (user) => {
+  const capabilities = getDefaultCapabilities(user.role);
+  return jwt.sign(
+    { 
+      sub: user._id, 
+      email: user.email, 
+      role: user.role, 
+      canSell: user.canSell ?? capabilities.canSell, 
+      canBuy: user.canBuy ?? capabilities.canBuy, 
+      canDeliver: user.canDeliver ?? capabilities.canDeliver,
+      isVerified: user.isVerified 
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRATION || '7d' }
+  );
+};
 
 // POST /auth/register
 exports.register = async (req, res) => {

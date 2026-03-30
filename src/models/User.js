@@ -57,6 +57,12 @@ const userSchema = new mongoose.Schema({
 // Retirer les champs sensibles des réponses JSON
 userSchema.methods.toJSON = function () {
   const obj = this.toObject();
+  
+  // Migration virtuelle pour les anciens utilisateurs
+  if (obj.role === 'FARMER' || obj.role === 'ADMIN') obj.canSell = true;
+  if (obj.role === 'TRANSPORTER' || obj.role === 'ADMIN') obj.canDeliver = true;
+  if (obj.canBuy === undefined) obj.canBuy = true;
+
   delete obj.passwordHash;
   delete obj.otpCode;
   delete obj.otpExpires;
