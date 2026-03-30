@@ -1,4 +1,6 @@
 const Product = require('../models/Product');
+const { createNotification } = require('./notification.controller');
+const User = require('../models/User');
 
 exports.getCatalog = async (req, res) => {
   try {
@@ -15,7 +17,7 @@ exports.getCatalog = async (req, res) => {
     if (search) query.$text = { $search: search };
     const skip = (page - 1) * limit;
     const [products, total] = await Promise.all([
-      Product.find(query).populate('seller', 'firstName lastName city averageRating totalRatings').sort({ createdAt: -1 }).skip(skip).limit(parseInt(limit)),
+      Product.find(query).populate('seller', 'firstName lastName city profilePicture averageRating totalRatings').sort({ createdAt: -1 }).skip(skip).limit(parseInt(limit)),
       Product.countDocuments(query)
     ]);
     res.json({ products, total, page: parseInt(page), totalPages: Math.ceil(total / limit) });
@@ -24,7 +26,7 @@ exports.getCatalog = async (req, res) => {
 
 exports.getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id).populate('seller', 'firstName lastName city averageRating totalRatings phone');
+    const product = await Product.findById(req.params.id).populate('seller', 'firstName lastName city profilePicture averageRating totalRatings phone');
     if (!product) return res.status(404).json({ message: 'Produit non trouvé' });
     res.json(product);
   } catch (err) { res.status(500).json({ message: err.message }); }
@@ -42,6 +44,18 @@ exports.createProduct = async (req, res) => {
 
     const product = await Product.create({ seller: req.user.sub, name, description, price, unit, quantity, category, city, address, location, lat, lng, images });
     res.status(201).json(product);
+
+    // Notification broadcast aux ACHETEURS
+    const buyers = await User.find({ role: 'BUYER', isActive: true });
+    for (const b of buyers) {
+       createNotification(
+         b._id,
+         'ORDER_STATUS', // Ou un nouveau type 'CATALOGUE'
+         'Nouveau produit disponible',
+         `${req.user.firstName} a ajouté un nouveau produit : ${product.name} (${product.city})`,
+         product._id
+       );
+    }
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
@@ -113,6 +127,32 @@ exports.getMyProducts = async (req, res) => {
   try {
     const products = await Product.find({ seller: req.user.sub }).sort({ createdAt: -1 });
     res.json(products);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+exports.updateStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: 'Produit non trouvé' });
+    
+    if (product.seller.toString() !== req.user.sub && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Non autorisé' });
+    }
+
+    if (status === 'active') {
+      product.available = true;
+      product.hidden = false;
+    } else if (status === 'inactive') {
+      product.available = false;
+      product.hidden = true; // farmer-initiated deactivation
+    } else if (status === 'out_of_stock') {
+      product.available = false;
+      product.hidden = false; // still visible but not buyable
+    }
+
+    await product.save();
+    res.json({ message: `Statut mis à jour : ${status}`, product });
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 

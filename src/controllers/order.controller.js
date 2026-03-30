@@ -1,19 +1,6 @@
 const Order   = require('../models/Order');
 const Product = require('../models/Product');
-const Notification = require('../models/Notification');
-
-// Helper pour créer une notification de statut de commande
-async function notifyOrderStatus(recipientId, title, message, orderId) {
-  try {
-    await Notification.create({
-      recipient: recipientId,
-      type: 'ORDER_STATUS',
-      title,
-      message,
-      relatedId: orderId?.toString(),
-    });
-  } catch (_) { /* ne pas bloquer si la notif échoue */ }
-}
+const { createNotification } = require('./notification.controller');
 
 exports.createOrder = async (req, res) => {
   try {
@@ -27,7 +14,7 @@ exports.createOrder = async (req, res) => {
     const order = await Order.create({ buyer: req.user.sub, seller: product.seller, product: productId, quantity, unitPrice: product.price, totalPrice, deliveryAddress, deliveryCity, deliveryLat, deliveryLng, deliveryBudget, buyerNote });
     res.status(201).json(order);
     // Notifier le vendeur d'une nouvelle commande
-    notifyOrderStatus(product.seller, 'Nouvelle commande reçue', `Une commande de ${quantity} ${product.unit} de ${product.name} attend votre confirmation.`, order._id);
+    createNotification(product.seller, 'ORDER_STATUS', 'Nouvelle commande reçue', `Une commande de ${quantity} ${product.unit} de ${product.name} attend votre confirmation.`, order._id);
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
@@ -89,7 +76,20 @@ exports.confirmOrder = async (req, res) => {
     const updated = await Order.findByIdAndUpdate(order._id, { status: 'CONFIRMED', pickupAddress, pickupCity, pickupLat, pickupLng, availableFrom: availableFrom || new Date(), transporterInstructions }, { new: true });
     res.json(updated);
     // Notifier l'acheteur que la commande est confirmée
-    notifyOrderStatus(order.buyer, 'Commande confirmée !', 'Votre commande a été confirmée par l\'agriculteur. La livraison sera bientôt organisée.', order._id);
+    createNotification(order.buyer, 'ORDER_STATUS', 'Commande confirmée !', 'Votre commande a été confirmée par l\'agriculteur. La livraison sera bientôt organisée.', order._id);
+
+    // Notifier les TRANSPORTEURS qu'une nouvelle mission est disponible
+    const User = require('../models/User');
+    const transporters = await User.find({ role: 'TRANSPORTER', isActive: true });
+    for (const t of transporters) {
+      createNotification(
+        t._id, 
+        'ORDER_STATUS', 
+        'Nouvelle mission disponible !', 
+        `Une nouvelle mission de transport est disponible de ${pickupCity} vers ${order.deliveryCity}.`, 
+        order._id
+      );
+    }
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
@@ -102,10 +102,20 @@ exports.cancelOrder = async (req, res) => {
     if (!['PENDING','CONFIRMED'].includes(order.status)) return res.status(400).json({ message: 'Impossible d\'annuler à ce stade' });
     const updated = await Order.findByIdAndUpdate(order._id, { status: 'CANCELLED', refusalReason: req.body.reason }, { new: true });
     res.json(updated);
-    // Notifier les deux parties de l'annulation
-    const cancelMsg = 'La commande a été annulée.';
+    // Notifier les deux parties (Acheteur/Vendeur) et le Transporteur si assigné
+    const cancelMsg = `La commande #${order._id.toString().slice(-4)} a été annulée.`;
     const otherId = order.buyer.toString() === req.user.sub ? order.seller : order.buyer;
-    notifyOrderStatus(otherId, 'Commande annulée', cancelMsg, order._id);
+    createNotification(otherId, 'ORDER_STATUS', 'Commande annulée', cancelMsg, order._id);
+    
+    if (order.transporter) {
+      createNotification(
+        order.transporter, 
+        'ORDER_STATUS', 
+        'Mission annulée', 
+        `La mission pour la commande #${order._id.toString().slice(-4)} a été annulée par le client.`, 
+        order._id
+      );
+    }
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
@@ -136,7 +146,7 @@ exports.updateStatus = async (req, res) => {
     const recipients = [order.buyer, order.seller, order.transporter].filter(Boolean);
     recipients.forEach((r) => {
       if (r.toString() !== req.user.sub) {
-        notifyOrderStatus(r, 'Statut de commande mis à jour', statusMsg, order._id);
+        createNotification(r, 'ORDER_STATUS', 'Statut de commande mis à jour', statusMsg, order._id);
       }
     });
   } catch (err) { res.status(500).json({ message: err.message }); }

@@ -1,6 +1,8 @@
 const Dispute = require('../models/Dispute');
 const Order   = require('../models/Order');
 const Payment = require('../models/Payment');
+const Notification = require('../models/Notification');
+const { createNotification } = require('./notification.controller');
 
 exports.createDispute = async (req, res) => {
   try {
@@ -14,6 +16,25 @@ exports.createDispute = async (req, res) => {
     let defendant = req.user.sub === order.buyer.toString() ? order.seller : order.buyer;
     const dispute = await Dispute.create({ order: orderId, claimant: req.user.sub, defendant, reason, description });
     res.status(201).json(dispute);
+
+    // Notification au défendeur
+    await createNotification(
+      defendant,
+      'ORDER_STATUS',
+      'Nouveau litige ouvert',
+      `Un litige a été ouvert concernant votre commande #${orderId.toString().slice(-4)}.`,
+      orderId
+    );
+
+    // Notification à l'Admin (global ou rôle)
+    // On pourrait créer une notification globale ou pour le rôle ADMIN
+    await Notification.create({
+      recipientRole: 'ADMIN',
+      type: 'ADMIN_ACTION',
+      title: 'Nouveau litige à traiter',
+      message: `Un litige a été ouvert par un utilisateur pour la commande #${orderId.toString().slice(-4)}.`,
+      relatedId: dispute._id
+    });
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 

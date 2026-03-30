@@ -4,6 +4,7 @@ const Order   = require('../models/Order');
 const Payment = require('../models/Payment');
 const Dispute = require('../models/Dispute');
 const PaymentService = require('../services/payment.service');
+const { createNotification } = require('./notification.controller');
 
 exports.getStats = async (req, res) => {
   try {
@@ -58,6 +59,15 @@ exports.updateUserStatus = async (req, res) => {
     const { isActive } = req.body;
     const user = await User.findByIdAndUpdate(req.params.id, { isActive }, { new: true });
     if (!user) return res.status(404).json({ message: 'Utilisateur non trouvé' });
+    
+    // Notification de changement de statut de compte
+    await createNotification(
+      user._id,
+      'ADMIN_ACTION',
+      isActive ? 'Compte activé' : 'Compte suspendu',
+      `Votre compte a été ${isActive ? 'réactivé' : 'suspendu'} par l'administration.`
+    );
+
     res.json({ message: `Compte ${isActive ? 'activé' : 'suspendu'}`, user });
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
@@ -88,6 +98,18 @@ exports.getProducts = async (req, res) => {
 exports.hideProduct = async (req, res) => {
   try {
     const product = await Product.findByIdAndUpdate(req.params.id, { hidden: true }, { new: true });
+    
+    // Notification au vendeur
+    if (product) {
+      await createNotification(
+        product.seller,
+        'ADMIN_ACTION',
+        'Produit masqué',
+        `Votre produit "${product.name}" a été masqué par la modération.`,
+        product._id
+      );
+    }
+
     res.json({ message: 'Produit masqué', product });
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
@@ -97,6 +119,18 @@ exports.updateProductStatus = async (req, res) => {
     const { status } = req.body;
     const available = status === 'active';
     const product = await Product.findByIdAndUpdate(req.params.id, { available, hidden: !available }, { new: true });
+    
+    // Notification au vendeur
+    if (product) {
+       await createNotification(
+        product.seller,
+        'ADMIN_ACTION',
+        available ? 'Produit activé' : 'Produit désactivé',
+        `Le statut de votre produit "${product.name}" a été mis à jour par l'administration.`,
+        product._id
+      );
+    }
+
     res.json({ message: `Produit ${available ? 'activé' : 'désactivé'}`, product });
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
@@ -149,6 +183,11 @@ exports.resolveDispute = async (req, res) => {
       if (payment) await User.findByIdAndUpdate(dispute.order.buyer, { $inc: { walletBalance: payment.totalAmount } });
     }
     res.json({ message: 'Litige résolu', dispute });
+
+    // Notification aux deux parties
+    const resolutionMsg = `Le litige #${dispute._id.toString().slice(-4)} a été résolu : ${resolution}`;
+    await createNotification(dispute.claimant, 'ADMIN_ACTION', 'Litige résolu', resolutionMsg, dispute.order._id);
+    await createNotification(dispute.defendant, 'ADMIN_ACTION', 'Litige résolu', resolutionMsg, dispute.order._id);
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
@@ -164,6 +203,19 @@ exports.releaseFunds = async (req, res) => {
     const payment = await Payment.findById(req.params.id);
     if (!payment) return res.status(404).json({ message: 'Paiement non trouvé' });
     await PaymentService.releaseFunds(payment.order.toString());
+    
+    // Notification au vendeur
+    const order = await Order.findById(payment.order);
+    if (order) {
+      await createNotification(
+        order.seller,
+        'PAYMENT',
+        'Fonds libérés',
+        `Les fonds pour votre commande #${order._id.toString().slice(-4)} ont été libérés.`,
+        order._id
+      );
+    }
+
     res.json({ message: 'Fonds libérés manuellement' });
   } catch (err) { res.status(500).json({ message: err.message }); }
 };

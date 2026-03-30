@@ -69,6 +69,7 @@ router.post('/:id/price-offer', ctrl.sendPriceOffer);
  *     tags: [Messaging]
  *     security: [{ bearerAuth: [] }]
  */
+router.patch('/:id/read', ctrl.markAsRead);
 router.patch('/messages/:msgId/respond', ctrl.respondToOffer);
 
 module.exports = router;

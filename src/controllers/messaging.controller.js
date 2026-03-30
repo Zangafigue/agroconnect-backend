@@ -1,9 +1,7 @@
 const Conversation = require('../models/Conversation');
 const Message = require('../models/Message');
 const { createNotification } = require('./notification.controller');
-const Notification = require('../models/Notification');
 
-// Helper: crée une notification de message pour tous les participants sauf l'expéditeur
 async function notifyParticipants(conversation, senderId, messageContent) {
   const recipients = conversation.participants.filter(
     (p) => p.toString() !== senderId.toString()
@@ -11,13 +9,13 @@ async function notifyParticipants(conversation, senderId, messageContent) {
   const short = messageContent.length > 60 ? messageContent.substring(0, 60) + '...' : messageContent;
   await Promise.all(
     recipients.map((recipientId) =>
-      Notification.create({
-        recipient: recipientId,
-        type: 'MESSAGE',
-        title: 'Nouveau message',
-        message: short,
-        relatedId: conversation._id.toString(),
-      })
+      createNotification(
+        recipientId,
+        'MESSAGE',
+        'Nouveau message',
+        short,
+        conversation._id.toString()
+      )
     )
   );
 }
@@ -160,6 +158,21 @@ exports.respondToOffer = async (req, res) => {
     );
 
     res.json(response);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Marquer tous les messages d'une conversation comme lus
+exports.markAsRead = async (req, res) => {
+  try {
+    const conversationId = req.params.id;
+    // On marque comme lus les messages dont l'utilisateur n'est pas l'expéditeur
+    await Message.updateMany(
+      { conversation: conversationId, sender: { $ne: req.user.sub }, read: false },
+      { read: true }
+    );
+    res.json({ message: 'Conversation marquée comme lue' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

@@ -85,6 +85,7 @@ router.delete('/:id', verifyToken, requireCapability('canSell'), ctrl.deleteProd
  *     tags: [Products]
  *     security: [{ bearerAuth: [] }]
  */
+router.patch('/:id/status',       verifyToken, requireCapability('canSell'), ctrl.updateStatus);
 router.patch('/:id/availability', verifyToken, requireCapability('canSell'), ctrl.toggleAvailability);
 
 module.exports = router;
