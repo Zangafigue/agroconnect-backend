@@ -10,9 +10,11 @@ router.use(verifyToken);
 router.get('/mine', notificationController.getMyNotifications);
 router.patch('/read-all', notificationController.markAllRead);
 router.patch('/:id/read', notificationController.markAsRead);
+router.delete('/bulk', notificationController.deleteNotifications);
+router.delete('/all', notificationController.deleteAllNotifications);
+router.delete('/:id', notificationController.deleteNotification);
 
 // Routes ADMIN
 router.get('/admin', requireRole('ADMIN'), notificationController.getAdminNotifications);
-router.delete('/:id', requireRole('ADMIN'), notificationController.deleteNotification);
 
 module.exports = router;

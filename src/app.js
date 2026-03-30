@@ -34,14 +34,14 @@ app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 // -- Rate Limiting -------------------------------------------------------------
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100,
+  max: 2000, // Relaxed for development and polling
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: 'Trop de requêtes, réessayez dans 15 minutes.' }
 });
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10, // plus strict pour les routes sensibles
+  max: 100, // Reasonable limit for auth
   message: { message: 'Trop de tentatives de connexion, réessayez dans 15 minutes.' }
 });
 app.use(globalLimiter);

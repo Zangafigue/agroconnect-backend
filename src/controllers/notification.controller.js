@@ -29,11 +29,12 @@ const notificationController = {
 
   markAsRead: async (req, res) => {
     try {
-      const notification = await Notification.findByIdAndUpdate(
-        req.params.id,
+      const notification = await Notification.findOneAndUpdate(
+        { _id: req.params.id, recipient: req.user.sub },
         { isRead: true },
         { new: true }
       );
+      if (!notification) return res.status(404).json({ message: 'Notification introuvable' });
       res.json(notification);
     } catch (error) {
       res.status(500).json({ message: error.message });
