@@ -13,11 +13,12 @@ const userSchema = new mongoose.Schema({
   firstName:    { type: String, required: true, trim: true },
   lastName:     { type: String, required: true, trim: true },
   phone:        { type: String },
-  role:         { type: String, enum: ['FARMER','BUYER','TRANSPORTER','ADMIN'], required: true },
+  role:         { type: String, enum: ['FARMER','BUYER','TRANSPORTER','ADMIN','USER'], required: true },
 
   // Capacités dynamiques
   canSell: { type: Boolean, default: false },
   canBuy:  { type: Boolean, default: true  },
+  canDeliver: { type: Boolean, default: false },
 
   // Vérification email OTP
   isVerified:  { type: Boolean, default: false },

@@ -42,7 +42,7 @@ router.post('/change-password', verifyToken, ctrl.changePassword);
 router.post('/profile/picture', verifyToken, require('../middleware/upload.middleware').single('avatar'), async (req, res) => {
   try {
     const User = require('../models/User');
-    const profilePicture = `/uploads/profiles/${req.file.filename}`;
+    const profilePicture = req.file.path; // Supports both local path and Cloudinary URL
     const user = await User.findByIdAndUpdate(
       req.user.sub,
       { profilePicture },

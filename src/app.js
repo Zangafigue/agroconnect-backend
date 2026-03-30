@@ -67,6 +67,7 @@ app.use('/api/settings',      require('./routes/settings.routes'));
 app.use('/api/users',         require('./routes/user.routes'));
 app.use('/api/producers',     require('./routes/user.routes')); // Alias for producerService
 app.use('/api/notifications', require('./routes/notification.routes'));
+app.use('/api',               require('./routes/roleRequest.routes'));
 
 // -- Health check -------------------------------------------------------------
 app.get('/api/health', (req, res) =>

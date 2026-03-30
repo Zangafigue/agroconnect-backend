@@ -41,4 +41,8 @@ router.patch('/:id/read', ctrl.markAsRead);
  */
 router.patch('/read-all', ctrl.markAllAsRead);
 
+router.delete('/bulk', ctrl.deleteNotifications);
+router.delete('/all', ctrl.deleteAllNotifications);
+router.delete('/:id', ctrl.deleteNotification);
+
 module.exports = router;

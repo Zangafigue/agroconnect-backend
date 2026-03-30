@@ -1,5 +1,6 @@
 const Conversation = require('../models/Conversation');
 const Message = require('../models/Message');
+const User = require('../models/User');
 const { createNotification } = require('./notification.controller');
 
 async function notifyParticipants(conversation, senderId, messageContent) {
@@ -23,11 +24,39 @@ async function notifyParticipants(conversation, senderId, messageContent) {
 // Obtenir toutes les conversations de l'utilisateur
 exports.getMyConversations = async (req, res) => {
   try {
-    const conversations = await Conversation.find({ participants: req.user.sub })
-      .populate('participants', 'firstName lastName profilePicture')
+    const conversations = await Conversation.find({ 
+      participants: req.user.sub,
+      deletedBy: { $ne: req.user.sub }
+    })
+      .populate('participants', 'firstName lastName profilePicture role')
       .populate('lastMessage')
       .sort('-updatedAt');
-    res.json(conversations);
+    
+    // S'assurer que chaque conversation a un type et dédupliquer par interlocuteur
+    const uniqueConversations = new Map();
+
+    for (let c of conversations) {
+      const conv = c.toObject();
+      const other = conv.participants.find(p => p._id.toString() !== req.user.sub.toString());
+      const otherId = other?._id.toString() || 'unknown';
+
+      // On ne garde que la plus récente pour chaque interlocuteur (triées par updatedAt déjà)
+      if (!uniqueConversations.has(otherId)) {
+        if (!conv.type) {
+          conv.type = (other?.role === 'TRANSPORTER' || req.user.role === 'TRANSPORTER') ? 'TRANSPORT' : 'NEGOTIATION';
+        }
+        // Compter les messages non-lus dans cette conversation pour cet utilisateur
+        const unreadCount = await Message.countDocuments({
+          conversation: conv._id,
+          sender: { $ne: req.user.sub },
+          read: false
+        });
+        conv.unreadCount = unreadCount;
+        uniqueConversations.set(otherId, conv);
+      }
+    }
+
+    res.json(Array.from(uniqueConversations.values()));
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
@@ -41,7 +70,10 @@ exports.getMessages = async (req, res) => {
     if (!conversation?.participants.includes(req.user.sub))
       return res.status(403).json({ message: 'Non autorisé' });
 
-    const messages = await Message.find({ conversation: conversationId })
+    const messages = await Message.find({ 
+      conversation: conversationId,
+      deletedBy: { $ne: req.user.sub }
+    })
       .populate('sender', 'firstName lastName profilePicture')
       .sort('-createdAt')
       .limit(limit);
@@ -55,18 +87,32 @@ exports.startConversation = async (req, res) => {
   try {
     const { recipientId, productId, orderId } = req.body;
     
-    // Chercher une conversation existante entre ces deux
+    // Chercher UNE SEULE conversation existante entre ces deux
     let conversation = await Conversation.findOne({
-      participants: { $all: [req.user.sub, recipientId] },
-      ...(productId && { product: productId }),
-      ...(orderId && { order: orderId })
+      participants: { $all: [req.user.sub, recipientId] }
     });
 
+    if (conversation) {
+      // Mettre à jour le contexte (optionnel, mais utile)
+      if (productId) conversation.product = productId;
+      if (orderId) conversation.order = orderId;
+      // Retirer du deletedBy si nécessaire (s'il l'avait "supprimée" mais l'autre lui parle)
+      conversation.deletedBy = conversation.deletedBy.filter(id => id.toString() !== req.user.sub.toString());
+      conversation.deletedBy = conversation.deletedBy.filter(id => id.toString() !== recipientId.toString());
+      await conversation.save();
+      return res.status(200).json(conversation);
+    }
+
     if (!conversation) {
+      // Déterminer le type par défaut en fonction du destinataire
+      const recipient = await User.findById(recipientId);
+      const isTransport = recipient?.role === 'TRANSPORTER' || req.user.role === 'TRANSPORTER';
+      
       conversation = await Conversation.create({
         participants: [req.user.sub, recipientId],
         product: productId,
-        order: orderId
+        order: orderId,
+        type: isTransport ? 'TRANSPORT' : 'NEGOTIATION'
       });
     }
 
@@ -172,7 +218,42 @@ exports.markAsRead = async (req, res) => {
       { conversation: conversationId, sender: { $ne: req.user.sub }, read: false },
       { read: true }
     );
+
+    // Marquer également les notifications liées comme lues
+    const Notification = require('../models/Notification');
+    await Notification.updateMany(
+      { recipient: req.user.sub, relatedId: conversationId, isRead: false },
+      { isRead: true }
+    );
+
     res.json({ message: 'Conversation marquée comme lue' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Supprimer (cacher) une conversation
+exports.deleteConversation = async (req, res) => {
+  try {
+    const conversationId = req.params.id;
+    await Conversation.findByIdAndUpdate(conversationId, {
+      $addToSet: { deletedBy: req.user.sub }
+    });
+    res.json({ message: 'Conversation supprimée pour cet utilisateur' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Supprimer (cacher) des messages en vrac
+exports.deleteMessages = async (req, res) => {
+  try {
+    const { messageIds } = req.body;
+    await Message.updateMany(
+      { _id: { $in: messageIds } },
+      { $addToSet: { deletedBy: req.user.sub } }
+    );
+    res.json({ message: `${messageIds.length} messages supprimés` });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

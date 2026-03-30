@@ -40,6 +40,7 @@ router.post('/', ctrl.startConversation);
  *     security: [{ bearerAuth: [] }]
  */
 router.get('/:id/messages', ctrl.getMessages);
+router.patch('/:id/read', ctrl.markAsRead);
 
 /**
  * @swagger
@@ -69,7 +70,9 @@ router.post('/:id/price-offer', ctrl.sendPriceOffer);
  *     tags: [Messaging]
  *     security: [{ bearerAuth: [] }]
  */
-router.patch('/:id/read', ctrl.markAsRead);
 router.patch('/messages/:msgId/respond', ctrl.respondToOffer);
+
+router.delete('/messages/bulk', ctrl.deleteMessages);
+router.delete('/delete/:id', ctrl.deleteConversation);
 
 module.exports = router;

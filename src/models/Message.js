@@ -11,6 +11,7 @@ const messageSchema = new mongoose.Schema({
   },
   offerAmount: { type: Number },
   read:        { type: Boolean, default: false },
+  deletedBy:   [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
 }, { timestamps: true });
 
 module.exports = mongoose.model('Message', messageSchema);

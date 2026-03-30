@@ -54,16 +54,45 @@ const notificationController = {
 
   deleteNotification: async (req, res) => {
     try {
-      await Notification.findByIdAndDelete(req.params.id);
+      await Notification.findOneAndDelete({ _id: req.params.id, recipient: req.user.sub });
       res.json({ message: 'Notification supprimée' });
     } catch (error) {
       res.status(500).json({ message: error.message });
     }
   },
 
-  // Helper interne pour les autres contrôleurs
+  deleteNotifications: async (req, res) => {
+    try {
+      const { ids } = req.body;
+      await Notification.deleteMany({ _id: { $in: ids }, recipient: req.user.sub });
+      res.json({ message: `${ids.length} notifications supprimées` });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
+
+  deleteAllNotifications: async (req, res) => {
+    try {
+      await Notification.deleteMany({ recipient: req.user.sub });
+      res.json({ message: 'Toutes les notifications supprimées' });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
+
   createNotification: async (recipient, type, title, message, relatedId = null) => {
     try {
+      // Éviter les doublons exacts créés en même temps (throttle de 2s)
+      const existing = await Notification.findOne({
+        recipient,
+        type,
+        title,
+        message,
+        relatedId,
+        createdAt: { $gte: new Date(Date.now() - 2000) }
+      });
+      if (existing) return existing;
+
       return await Notification.create({
         recipient,
         type,

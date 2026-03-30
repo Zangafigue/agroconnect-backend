@@ -151,3 +151,28 @@ exports.updateStatus = async (req, res) => {
     });
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
+exports.payOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ message: 'Commande non trouvée' });
+    if (order.buyer.toString() !== req.user.sub) return res.status(403).json({ message: 'Non autorisé' });
+    
+    // Pour l'instant, on simule le succès du paiement
+    const updated = await Order.findByIdAndUpdate(
+      order._id, 
+      { isPaid: true, paymentStatus: 'PAID', status: 'PAID' }, 
+      { new: true }
+    );
+    
+    res.json(updated);
+    
+    // Notifier le vendeur
+    createNotification(
+      order.seller, 
+      'ORDER_STATUS', 
+      'Commande payée !', 
+      `L'acheteur a réglé la commande #${order._id.toString().slice(-4)}. Vous pouvez préparer l'expédition.`, 
+      order._id
+    );
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};

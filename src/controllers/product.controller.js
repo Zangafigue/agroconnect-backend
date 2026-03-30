@@ -125,7 +125,9 @@ exports.deleteProduct = async (req, res) => {
 
 exports.getMyProducts = async (req, res) => {
   try {
-    const products = await Product.find({ seller: req.user.sub }).sort({ createdAt: -1 });
+    const products = await Product.find({ seller: req.user.sub })
+      .populate('seller', 'firstName lastName city profilePicture')
+      .sort({ createdAt: -1 });
     res.json(products);
   } catch (err) { res.status(500).json({ message: err.message }); }
 };

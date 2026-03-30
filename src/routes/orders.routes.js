@@ -83,6 +83,7 @@ router.post('/:id/cancel',  ctrl.cancelOrder);
  */
 router.patch('/:id/position', requireCapability('canDeliver'), ctrl.updateTransporterPosition);
 router.patch('/:id/status',   ctrl.updateStatus); 
+router.patch('/:id/pay',      ctrl.payOrder);
 router.post('/:orderId/offers', requireCapability('canDeliver'), require('../controllers/transporter.controller').submitOffer);
 
 module.exports = router;

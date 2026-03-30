@@ -14,8 +14,8 @@ const generateToken = (user) => jwt.sign(
 // POST /auth/register
 exports.register = async (req, res) => {
   try {
-    const { email, password, firstName, lastName, phone, role = 'BUYER' } = req.body;
-    if (!['FARMER','BUYER','TRANSPORTER'].includes(role))
+    const { email, password, firstName, lastName, phone, role = 'USER' } = req.body;
+    if (!['FARMER','BUYER','TRANSPORTER','USER'].includes(role))
       return res.status(400).json({ message: 'Rôle invalide' });
 
     const existing = await User.findOne({ email });
@@ -188,7 +188,14 @@ exports.updateCapabilities = async (req, res) => {
 // PATCH /auth/profile
 exports.updateProfile = async (req, res) => {
   try {
-    const { firstName, lastName, phone, city, address, bio } = req.body;
+    const { firstName, lastName, phone, city, address, bio, canDeliver, vehicle, coverageArea } = req.body;
+    
+    // Pour le workflow Instant-Active du Transporteur
+    let additionalUpdates = {};
+    if (canDeliver !== undefined) additionalUpdates.canDeliver = canDeliver;
+    if (vehicle) additionalUpdates.vehicle = vehicle;
+    if (coverageArea) additionalUpdates.coverageArea = coverageArea;
+
     const user = await User.findByIdAndUpdate(
       req.user.sub,
       { 
@@ -197,7 +204,8 @@ exports.updateProfile = async (req, res) => {
         ...(phone && { phone }),
         ...(city && { city }),
         ...(address && { address }),
-        ...(bio && { bio })
+        ...(bio && { bio }),
+        ...additionalUpdates
       },
       { new: true }
     );

@@ -9,9 +9,16 @@ const orderSchema = new mongoose.Schema({
   totalPrice: { type: Number, required: true },
   status: {
     type: String,
-    enum: ['PENDING','CONFIRMED','IN_TRANSIT','DELIVERED','CANCELLED','DISPUTED'],
+    enum: ['PENDING','CONFIRMED','AWAITING_PAYMENT','PAID','IN_TRANSIT','DELIVERED','CANCELLED','DISPUTED'],
     default: 'PENDING'
   },
+  isPaid: { type: Boolean, default: false },
+  paymentStatus: {
+    type: String,
+    enum: ['PENDING', 'PAID'],
+    default: 'PENDING'
+  },
+  totalAmount: { type: Number }, // Product Total + Delivery Fee
   // Renseigné par le Farmer à la confirmation
   pickupAddress:           { type: String },
   pickupCity:              { type: String },
